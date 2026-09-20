@@ -74,6 +74,11 @@
   .rider-chip.off { background:#f1f1f2; color:#aaa; text-decoration:line-through; border-color:#f1f1f2; }
   .rider-chip.mine { box-shadow: 0 0 0 2px var(--accent); }
   .rider-chip.not-mine { cursor:default; opacity:0.7; }
+  .rider-check { display:inline-flex; align-items:center; gap:5px; font-size:13px; padding:3px 8px 3px 4px; border-radius:999px; border:1px solid var(--border); background:white; }
+  .rider-check.mine { box-shadow: 0 0 0 2px var(--accent); font-weight:700; }
+  .rider-check.not-mine { opacity:0.6; }
+  .rider-check input[type=checkbox] { width:16px; height:16px; margin:0; }
+  .rider-check.off-label { color:var(--muted); text-decoration:line-through; }
   .riders-label { font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700; margin-right:2px; align-self:center; }
 </style>
 </head>
@@ -357,9 +362,13 @@ function ridersRowHtml(dateKey, shift) {
   const chips = families.map(f => {
     const isOn = activeRiders.includes(f.id);
     const isMine = f.id === myFamilyId;
-    const classes = `rider-chip ${isOn?'':'off'} ${isMine?'mine':'not-mine'}`;
-    const clickAttr = isMine ? `onclick="toggleRider('${dateKey}','${shift}','${f.id}')"` : '';
-    return `<span class="${classes}" ${clickAttr}>${riderLabel(f)}${isMine?' (you)':''}</span>`;
+    const checkAttr = isOn ? 'checked' : '';
+    const disabledAttr = isMine ? '' : 'disabled';
+    const changeAttr = isMine ? `onchange="toggleRider('${dateKey}','${shift}','${f.id}')"` : '';
+    return `<label class="rider-check ${isMine?'mine':'not-mine'}">
+      <input type="checkbox" ${checkAttr} ${disabledAttr} ${changeAttr}>
+      <span class="${isOn?'':'off-label'}">${riderLabel(f)}${isMine?' (you)':''}</span>
+    </label>`;
   }).join('');
   return `<div class="riders-row"><span class="riders-label">Riding:</span>${chips}</div>`;
 }
