@@ -27,7 +27,486 @@
   .identity-bar strong { color: var(--accent); }
   .identity-bar button { background:none; border:none; color:var(--accent); font-size:13px; cursor:pointer; font-weight:600; }
   .tabs { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; }
-  .tab { flex:1; text-align:center; padding:9px 6px; border-radius:10px; font-size:13px; background:var(--card); border:1px solid var(--border); cursor:pointer; white-space:nowrap;
-ENDOFFILE 
-head -5 index.html 
+  .tab { flex:1; text-align:center; padding:9px 6px; border-radius:10px; font-size:13px; background:var(--card); border:1px solid var(--border); cursor:pointer; white-space:nowrap; color:var(--muted); font-weight:600; }
+  .tab.active { background: var(--accent); color:white; border-color:var(--accent); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius: var(--radius); padding:16px; margin-bottom:14px; }
+  .card h2 { font-size:15px; margin:0 0 10px; }
+  .card h3 { font-size:13px; margin:14px 0 6px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+  .next-up { display:flex; flex-direction:column; gap:8px; }
+  .next-up-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--accent-light); font-size:14px; }
+  .next-up-item .chip { margin-left:auto; }
+  .empty-note { color:var(--muted); font-size:13px; padding:8px 0; }
+  .day-block { margin-bottom:10px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .day-header { padding:8px 12px; font-size:13px; font-weight:700; background:#fafbfc; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+  .day-header.today { background: var(--accent-light); color:var(--accent); }
+  .shift-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; font-size:14px; border-top:1px solid var(--border); }
+  .shift-row:first-of-type { border-top:none; }
+  .shift-label { color:var(--muted); width:46px; font-size:12px; text-transform:uppercase; font-weight:700; }
+  .shift-assignment { flex:1; margin-left:8px; cursor:pointer; }
+  .chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:13px; font-weight:600; color:white; }
+  .chip.open { background:#d8dbe0; color:#555; font-style:italic; font-weight:500; }
+  select, input[type=number], input[type=text] { font-size:14px; padding:7px 9px; border-radius:8px; border:1px solid var(--border); background:white; color:var(--text); }
+  button.btn { background: var(--accent); color:white; border:none; border-radius:9px; padding:9px 14px; font-size:14px; font-weight:600; cursor:pointer; }
+  button.btn.secondary { background:white; color:var(--accent); border:1px solid var(--accent); }
+  button.btn.danger { background:white; color:var(--danger); border:1px solid var(--danger); }
+  .gen-controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }
+  .avail-grid { width:100%; border-collapse:collapse; font-size:13px; }
+  .avail-grid th, .avail-grid td { padding:8px 4px; text-align:center; border-bottom:1px solid var(--border); }
+  .avail-grid th { color:var(--muted); font-weight:600; }
+  .avail-grid td:first-child, .avail-grid th:first-child { text-align:left; }
+  .avail-grid input[type=checkbox] { width:18px; height:18px; }
+  .overview-row { display:flex; align-items:center; gap:8px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); }
+  .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .swap-item { border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
+  .swap-item .swap-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .swap-item .swap-actions { display:flex; gap:8px; margin-top:8px; }
+  .badge { font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700; }
+  .badge.open { background:#fff3cd; color:#8a6d00; }
+  .badge.accepted { background:#d4f4e6; color:#0d7a4f; }
+  .family-edit-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .family-edit-row input[type=text] { flex:1; }
+  .color-swatch { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
+  .field-row { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+  label.small { font-size:12px; color:var(--muted); font-weight:600; }
+  .setup-warning { background:#fff3cd; border:1px solid #f5cb5c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:14px; }
+</style>
+</head>
+<body>
+<div id="app">Loading...</div>
 
+<script>
+/* ============================================================
+   1) PASTE YOUR FIREBASE CONFIG HERE
+   Get this from: Firebase console > Project settings > General
+   > "Your apps" > the web app (</>) icon > SDK setup and config.
+   It looks like the object below but with real values.
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBu7mMgHr3gS5TC6MMt1kW_4nwbW6kZO0Q",
+  authDomain: "shelton-carpool.firebaseapp.com",
+  projectId: "shelton-carpool",
+  storageBucket: "shelton-carpool.firebasestorage.app",
+  messagingSenderId: "1083371894008",
+  appId: "1:1083371894008:web:adeaff6d3096e847bbb70d"
+};
+
+const CONFIG_IS_PLACEHOLDER = firebaseConfig.apiKey === "PASTE_YOUR_API_KEY";
+
+let db = null;
+if (!CONFIG_IS_PLACEHOLDER) {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}
+
+const WEEKDAYS = ['mon','tue','wed','thu','fri'];
+const WEEKDAY_LABELS = {mon:'Monday', tue:'Tuesday', wed:'Wednesday', thu:'Thursday', fri:'Friday'};
+const DAY_NUM_TO_KEY = {1:'mon',2:'tue',3:'wed',4:'thu',5:'fri'};
+const DEFAULT_COLORS = ['#3f5efb','#e5484d','#22b07d','#f5a623','#9b59d0'];
+
+let families = [];
+let availability = {};
+let schedule = {};
+let swaps = [];
+let myFamilyId = localStorage.getItem('my-family-id') || null;
+let currentTab = 'schedule';
+let viewWeeks = 3;
+let editingFamilyIdForAvail = null;
+let loaded = false;
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fromISO(s){ return new Date(s+'T00:00:00'); }
+function addDays(d,n){ const nd=new Date(d); nd.setDate(nd.getDate()+n); return nd; }
+function isWeekday(d){ const dow=d.getDay(); return dow>=1 && dow<=5; }
+function displayDate(d){ return d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}); }
+function familyById(id){ return families.find(f=>f.id===id); }
+
+function defaultState() {
+  const fams = DEFAULT_COLORS.map((c,i)=>({id: uid(), name:'Family '+(i+1), color:c}));
+  const avail = {};
+  fams.forEach(f=>{ avail[f.id] = {}; WEEKDAYS.forEach(w=> avail[f.id][w] = {AM:true, PM:true}); });
+  return { families: fams, availability: avail, schedule: {}, swaps: [] };
+}
+
+function docRef() { return db.collection('carpool').doc('state'); }
+
+async function ensureStateExists() {
+  const snap = await docRef().get();
+  if (!snap.exists) {
+    await docRef().set(defaultState());
+  }
+}
+
+function startListening() {
+  docRef().onSnapshot((snap) => {
+    if (!snap.exists) return;
+    const data = snap.data();
+    families = data.families || [];
+    availability = data.availability || {};
+    schedule = data.schedule || {};
+    swaps = data.swaps || [];
+    families.forEach(f=>{
+      if (!availability[f.id]) { availability[f.id] = {}; WEEKDAYS.forEach(w=> availability[f.id][w] = {AM:true, PM:true}); }
+    });
+    loaded = true;
+    render();
+  }, (err) => {
+    console.error(err);
+    document.getElementById('app').innerHTML = `<div class="setup-warning"><strong>Couldn't connect to Firebase.</strong><br>${err.message}<br><br>Double-check your firebaseConfig values and Firestore security rules.</div>`;
+  });
+}
+
+async function saveState() {
+  try {
+    await docRef().set({ families, availability, schedule, swaps });
+  } catch(e) { console.error('save failed', e); }
+}
+
+function generateSchedule(startDate, numWeeks) {
+  let counts = {}; families.forEach(f=>counts[f.id]=0);
+  let lastIdx = {}; let idx = 0;
+  Object.keys(schedule).sort().forEach(dateKey=>{
+    ['AM','PM'].forEach(shift=>{
+      const fid = schedule[dateKey][shift];
+      if (fid && counts[fid]!==undefined) { counts[fid]++; lastIdx[fid]=idx; }
+      idx++;
+    });
+  });
+  let current = new Date(startDate);
+  while (!isWeekday(current)) current = addDays(current,1);
+  let filled = 0;
+  const targetSlots = numWeeks * 5;
+  while (filled < targetSlots) {
+    const dateKey = toISO(current);
+    const wkey = DAY_NUM_TO_KEY[current.getDay()];
+    if (!schedule[dateKey]) schedule[dateKey] = {AM:null, PM:null};
+    ['AM','PM'].forEach(shift=>{
+      idx++;
+      if (schedule[dateKey][shift]) return;
+      let candidates = families.filter(f => availability[f.id]?.[wkey]?.[shift] !== false);
+      if (candidates.length === 0) { schedule[dateKey][shift] = null; return; }
+      candidates.sort((a,b)=>{
+        const ca = counts[a.id]||0, cb = counts[b.id]||0;
+        if (ca !== cb) return ca - cb;
+        const la = lastIdx[a.id] ?? -1, lb = lastIdx[b.id] ?? -1;
+        return la - lb;
+      });
+      const chosen = candidates[0];
+      schedule[dateKey][shift] = chosen.id;
+      counts[chosen.id] = (counts[chosen.id]||0) + 1;
+      lastIdx[chosen.id] = idx;
+    });
+    filled++;
+    current = addDays(current, 1);
+    while (!isWeekday(current)) current = addDays(current, 1);
+  }
+}
+
+function getUpcomingDates(numWeeks) {
+  const dates = [];
+  let d = new Date();
+  d.setHours(0,0,0,0);
+  while (!isWeekday(d)) d = addDays(d,1);
+  const count = numWeeks * 5;
+  for (let i=0;i<count;i++){ dates.push(new Date(d)); d = addDays(d,1); while(!isWeekday(d)) d = addDays(d,1); }
+  return dates;
+}
+
+function chipHtml(familyId) {
+  if (!familyId) return `<span class="chip open">Open — needs a driver</span>`;
+  const f = familyById(familyId);
+  if (!f) return `<span class="chip open">Unknown</span>`;
+  const mine = familyId === myFamilyId ? ' ★' : '';
+  return `<span class="chip" style="background:${f.color}">${f.name}${mine}</span>`;
+}
+
+function render() {
+  const app = document.getElementById('app');
+
+  if (CONFIG_IS_PLACEHOLDER) {
+    app.innerHTML = `<div class="setup-warning">
+      <strong>Setup needed:</strong> This file still has placeholder Firebase config values.
+      Open this HTML file in a text editor, find the <code>firebaseConfig</code> object near the top of the &lt;script&gt;,
+      and paste in your real project values from the Firebase console. See the setup instructions for the exact steps.
+    </div>`;
+    return;
+  }
+  if (!loaded) { app.innerHTML = `<div class="empty-note">Connecting…</div>`; return; }
+
+  let html = `<h1>🚗 School Carpool Scheduler</h1><div class="subtitle">AM drop-off & PM pickup, Monday–Friday</div>`;
+
+  html += `<div class="identity-bar">`;
+  if (myFamilyId && familyById(myFamilyId)) {
+    html += `<div>You're viewing as <strong>${familyById(myFamilyId).name}</strong></div><button onclick="promptIdentity()">Change</button>`;
+  } else {
+    html += `<div>Select your family to get started</div>`;
+  }
+  html += `</div>`;
+
+  if (!myFamilyId || !familyById(myFamilyId)) {
+    html += `<div class="card"><h2>Which family are you?</h2>`;
+    families.forEach(f=>{
+      html += `<div class="family-edit-row"><span class="dot" style="background:${f.color}"></span> ${f.name} <button class="btn secondary" style="margin-left:auto" onclick="selectIdentity('${f.id}')">This is me</button></div>`;
+    });
+    html += `<div class="empty-note">Family names look generic? Rename them in the Settings tab first — anyone can edit those.</div></div>`;
+    app.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="tabs">`;
+  [['schedule','Schedule'],['availability','Availability'],['swaps','Swap Board'],['settings','Settings']].forEach(([key,label])=>{
+    html += `<div class="tab ${currentTab===key?'active':''}" onclick="switchTab('${key}')">${label}</div>`;
+  });
+  html += `</div>`;
+
+  if (currentTab === 'schedule') html += renderScheduleTab();
+  else if (currentTab === 'availability') html += renderAvailabilityTab();
+  else if (currentTab === 'swaps') html += renderSwapsTab();
+  else if (currentTab === 'settings') html += renderSettingsTab();
+
+  app.innerHTML = html;
+}
+
+function renderScheduleTab() {
+  const upcoming = getUpcomingDates(viewWeeks);
+  const todayISO = toISO(new Date());
+  let myNext = [];
+  upcoming.forEach(d=>{
+    const key = toISO(d);
+    const s = schedule[key];
+    if (!s) return;
+    ['AM','PM'].forEach(shift=>{ if (s[shift] === myFamilyId) myNext.push({date:d, shift}); });
+  });
+
+  let html = `<div class="card"><h2>👋 Your next shifts</h2><div class="next-up">`;
+  if (myNext.length === 0) {
+    html += `<div class="empty-note">No upcoming shifts assigned to you yet in the visible range. Generate the schedule below if it's empty.</div>`;
+  } else {
+    myNext.slice(0,5).forEach(item=>{
+      html += `<div class="next-up-item">${displayDate(item.date)} — ${item.shift === 'AM' ? 'Drop-off' : 'Pickup'} <span class="chip" style="background:${familyById(myFamilyId).color};margin-left:auto">You're up</span></div>`;
+    });
+  }
+  html += `</div></div>`;
+
+  html += `<div class="card"><h2>Generate / extend rotation</h2>
+    <div class="gen-controls">
+      <label class="small">Weeks to fill: <input type="number" id="genWeeks" min="1" max="12" value="4" style="width:60px"></label>
+      <button class="btn" onclick="doGenerate()">Auto-fill fair schedule</button>
+    </div>
+    <div class="empty-note">Fills only empty shifts, balances totals across families based on the Availability tab, and never overwrites shifts already assigned.</div>
+  </div>`;
+
+  html += `<div class="card"><h2>Upcoming schedule</h2>
+    <div class="gen-controls">
+      <label class="small">Show: <select onchange="changeViewWeeks(this.value)">
+        <option value="1" ${viewWeeks===1?'selected':''}>1 week</option>
+        <option value="2" ${viewWeeks===2?'selected':''}>2 weeks</option>
+        <option value="3" ${viewWeeks===3?'selected':''}>3 weeks</option>
+        <option value="4" ${viewWeeks===4?'selected':''}>4 weeks</option>
+      </select></label>
+    </div>`;
+
+  upcoming.forEach(d=>{
+    const key = toISO(d);
+    const s = schedule[key] || {AM:null, PM:null};
+    const isToday = key === todayISO;
+    html += `<div class="day-block">
+      <div class="day-header ${isToday?'today':''}">${displayDate(d)} ${isToday?'· Today':''}</div>
+      <div class="shift-row"><span class="shift-label">AM</span>
+        <span class="shift-assignment" onclick="openOverride('${key}','AM')">${chipHtml(s.AM)}</span>
+      </div>
+      <div class="shift-row"><span class="shift-label">PM</span>
+        <span class="shift-assignment" onclick="openOverride('${key}','PM')">${chipHtml(s.PM)}</span>
+      </div>
+    </div>`;
+  });
+  html += `<div class="empty-note">Tap any shift to manually reassign it.</div></div>`;
+
+  return html;
+}
+
+function openOverride(dateKey, shift) {
+  const choice = prompt(
+    `Reassign ${dateKey} ${shift} to which family?\n\n` +
+    families.map((f,i)=>`${i+1}. ${f.name}`).join('\n') +
+    `\n0. Mark as OPEN (unassigned)\n\nEnter a number:`
+  );
+  if (choice === null) return;
+  const n = parseInt(choice, 10);
+  if (isNaN(n)) return;
+  if (!schedule[dateKey]) schedule[dateKey] = {AM:null, PM:null};
+  if (n === 0) schedule[dateKey][shift] = null;
+  else if (n >= 1 && n <= families.length) schedule[dateKey][shift] = families[n-1].id;
+  else return;
+  saveState();
+}
+
+function doGenerate() {
+  const weeksInput = document.getElementById('genWeeks');
+  const numWeeks = Math.max(1, Math.min(12, parseInt(weeksInput.value,10) || 4));
+  generateSchedule(new Date(), numWeeks);
+  saveState();
+}
+
+function changeViewWeeks(v) { viewWeeks = parseInt(v,10); render(); }
+
+function renderAvailabilityTab() {
+  if (!editingFamilyIdForAvail) editingFamilyIdForAvail = myFamilyId;
+  let html = `<div class="card"><h2>Set weekly availability</h2>
+    <div class="field-row">
+      <label class="small">Editing constraints for:</label>
+      <select onchange="switchAvailFamily(this.value)">
+        ${families.map(f=>`<option value="${f.id}" ${f.id===editingFamilyIdForAvail?'selected':''}>${f.name}</option>`).join('')}
+      </select>
+    </div>
+    <table class="avail-grid">
+      <tr><th>Day</th><th>AM</th><th>PM</th></tr>`;
+  WEEKDAYS.forEach(w=>{
+    const a = availability[editingFamilyIdForAvail][w];
+    html += `<tr>
+      <td>${WEEKDAY_LABELS[w]}</td>
+      <td><input type="checkbox" ${a.AM?'checked':''} onchange="toggleAvail('${w}','AM',this.checked)"></td>
+      <td><input type="checkbox" ${a.PM?'checked':''} onchange="toggleAvail('${w}','PM',this.checked)"></td>
+    </tr>`;
+  });
+  html += `</table><div class="empty-note">Uncheck a box if that family can never do that day/shift. Changes save automatically and affect the next auto-fill.</div></div>`;
+
+  html += `<div class="card"><h2>Overview — who can do what</h2>`;
+  families.forEach(f=>{
+    const days = WEEKDAYS.map(w=>{
+      const a = availability[f.id][w];
+      const marks = (a.AM?'AM':'') + (a.AM&&a.PM?'/':'') + (a.PM?'PM':'');
+      return `${WEEKDAY_LABELS[w].slice(0,3)}: ${marks || '—'}`;
+    }).join(' · ');
+    html += `<div class="overview-row"><span class="dot" style="background:${f.color}"></span><strong>${f.name}</strong></div>
+      <div class="empty-note" style="margin:-4px 0 6px 18px">${days}</div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function switchAvailFamily(id) { editingFamilyIdForAvail = id; render(); }
+function toggleAvail(weekday, shift, checked) {
+  availability[editingFamilyIdForAvail][weekday][shift] = checked;
+  saveState();
+}
+
+function renderSwapsTab() {
+  const upcoming = getUpcomingDates(4);
+  let myShifts = [];
+  upcoming.forEach(d=>{
+    const key = toISO(d);
+    const s = schedule[key];
+    if (!s) return;
+    ['AM','PM'].forEach(shift=>{ if (s[shift] === myFamilyId) myShifts.push({date:d, shift, key}); });
+  });
+
+  let html = `<div class="card"><h2>Need someone to cover a shift?</h2>`;
+  if (myShifts.length === 0) {
+    html += `<div class="empty-note">You have no upcoming assigned shifts in the next 4 weeks.</div>`;
+  } else {
+    html += `<div class="field-row">
+      <select id="coverSelect">
+        ${myShifts.map(s=>`<option value="${s.key}|${s.shift}">${displayDate(s.date)} — ${s.shift === 'AM' ? 'Drop-off' : 'Pickup'}</option>`).join('')}
+      </select>
+      <button class="btn" onclick="requestCover()">Ask the group to cover this</button>
+    </div>`;
+  }
+  html += `</div>`;
+
+  html += `<div class="card"><h2>Open coverage requests</h2>`;
+  const openSwaps = swaps.filter(s=>s.status==='open');
+  if (openSwaps.length === 0) {
+    html += `<div class="empty-note">No open requests right now.</div>`;
+  } else {
+    openSwaps.forEach(s=>{
+      const d = fromISO(s.date);
+      html += `<div class="swap-item">
+        <div class="swap-top">
+          <span><strong>${displayDate(d)}</strong> — ${s.shift === 'AM' ? 'Drop-off' : 'Pickup'}</span>
+          <span class="badge open">OPEN</span>
+        </div>
+        <div>Requested by: ${chipHtml(s.fromFamilyId)}</div>
+        <div class="swap-actions">
+          ${s.fromFamilyId !== myFamilyId ? `<button class="btn" onclick="acceptCover('${s.id}')">I'll cover it</button>` : `<button class="btn danger" onclick="cancelCover('${s.id}')">Cancel request</button>`}
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  const resolvedSwaps = swaps.filter(s=>s.status!=='open').slice(-8).reverse();
+  if (resolvedSwaps.length > 0) {
+    html += `<div class="card"><h2>Recent history</h2>`;
+    resolvedSwaps.forEach(s=>{
+      const d = fromISO(s.date);
+      html += `<div class="swap-item">
+        <div class="swap-top">
+          <span>${displayDate(d)} — ${s.shift === 'AM' ? 'Drop-off' : 'Pickup'}</span>
+          <span class="badge accepted">${s.status.toUpperCase()}</span>
+        </div>
+        <div>${chipHtml(s.fromFamilyId)} → ${s.toFamilyId ? chipHtml(s.toFamilyId) : '—'}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+function requestCover() {
+  const sel = document.getElementById('coverSelect');
+  const [dateKey, shift] = sel.value.split('|');
+  swaps.push({ id: uid(), date: dateKey, shift, fromFamilyId: myFamilyId, toFamilyId: null, status: 'open' });
+  saveState();
+}
+function acceptCover(swapId) {
+  const s = swaps.find(x=>x.id===swapId);
+  if (!s) return;
+  s.toFamilyId = myFamilyId;
+  s.status = 'accepted';
+  if (!schedule[s.date]) schedule[s.date] = {AM:null, PM:null};
+  schedule[s.date][s.shift] = myFamilyId;
+  saveState();
+}
+function cancelCover(swapId) {
+  swaps = swaps.filter(x=>x.id!==swapId);
+  saveState();
+}
+
+function renderSettingsTab() {
+  let html = `<div class="card"><h2>Family names & colors</h2>`;
+  families.forEach((f,i)=>{
+    html += `<div class="family-edit-row">
+      <input type="color" class="color-swatch" value="${f.color}" onchange="updateFamilyColor(${i}, this.value)">
+      <input type="text" value="${f.name}" onchange="updateFamilyName(${i}, this.value)">
+    </div>`;
+  });
+  html += `<div class="empty-note">Renaming a family updates it everywhere immediately.</div></div>`;
+  html += `<div class="card"><h2>Danger zone</h2>
+    <button class="btn danger" onclick="clearSchedule()">Clear entire schedule</button>
+    <div class="empty-note">This erases all generated assignments (not availability settings or family names).</div>
+  </div>`;
+  return html;
+}
+
+function updateFamilyName(i, val) { families[i].name = val || families[i].name; saveState(); }
+function updateFamilyColor(i, val) { families[i].color = val; saveState(); }
+function clearSchedule() {
+  if (!confirm('Clear the entire generated schedule? This cannot be undone.')) return;
+  schedule = {};
+  saveState();
+}
+
+function switchTab(t) { currentTab = t; render(); }
+function selectIdentity(id) { myFamilyId = id; localStorage.setItem('my-family-id', id); render(); }
+function promptIdentity() { myFamilyId = null; localStorage.removeItem('my-family-id'); render(); }
+
+(async function init() {
+  if (CONFIG_IS_PLACEHOLDER) { render(); return; }
+  await ensureStateExists();
+  startListening();
+})();
+</script>
+</body>
+</html>
