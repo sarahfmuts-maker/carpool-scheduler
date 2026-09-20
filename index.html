@@ -389,7 +389,23 @@ function renderAvailabilityTab() {
 function switchAvailFamily(id) { editingFamilyIdForAvail = id; render(); }
 function toggleAvail(weekday, shift, checked) {
   availability[editingFamilyIdForAvail][weekday][shift] = checked;
+  let clearedCount = 0;
+  if (!checked) {
+    const todayISO = toISO(new Date());
+    Object.keys(schedule).forEach(dateKey => {
+      if (dateKey < todayISO) return;
+      const d = fromISO(dateKey);
+      const wkey = DAY_NUM_TO_KEY[d.getDay()];
+      if (wkey === weekday && schedule[dateKey][shift] === editingFamilyIdForAvail) {
+        schedule[dateKey][shift] = null;
+        clearedCount++;
+      }
+    });
+  }
   saveState();
+  if (clearedCount > 0) {
+    alert(`Heads up: ${clearedCount} upcoming shift${clearedCount > 1 ? 's' : ''} that conflicted with this change ${clearedCount > 1 ? 'have' : 'has'} been cleared and marked Open for someone else to take.`);
+  }
 }
 
 function renderSwapsTab() {
