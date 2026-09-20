@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="en"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1">&lt;title&gt;School Carpool Scheduler&lt;/title&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- ============================================================</p>
+<p class="p1"><span class="Apple-converted-space">     </span>FIREBASE SETUP — see the setup instructions Claude gave you.</p>
+<p class="p1"><span class="Apple-converted-space">     </span>Replace the config object below with YOUR project's config</p>
+<p class="p1"><span class="Apple-converted-space">     </span>(from Firebase console &gt; Project settings &gt; Your apps).</p>
+<p class="p1"><span class="Apple-converted-space">     </span>============================================================ --&gt;</p>
+<p class="p1">&lt;script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"&gt;&lt;/script&gt;</p>
+<p class="p1">&lt;script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"&gt;&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>:root {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>--bg: #f7f8fa; --card: #ffffff; --border: #e2e5ea; --text: #1f2430; --muted: #6b7280;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>--accent: #3f5efb; --accent-light: #eef1ff; --danger: #e5484d; --radius: 14px;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>* { box-sizing: border-box; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>body { margin:0; font-family: -apple-system, BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); padding-bottom:40px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#app { max-width: 760px; margin: 0 auto; padding: 16px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>h1 { font-size: 20px; margin: 4px 0 2px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.subtitle { color: var(--muted); font-size: 13px; margin-bottom: 16px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.identity-bar { display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--border); border-radius: var(--radius); padding:10px 14px; margin-bottom:14px; font-size:14px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.identity-bar strong { color: var(--accent); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.identity-bar button { background:none; border:none; color:var(--accent); font-size:13px; cursor:pointer; font-weight:600; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.tabs { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.tab { flex:1; text-align:center; padding:9px 6px; border-radius:10px; font-size:13px; background:var(--card); border:1px solid var(--border); cursor:pointer; white-space:nowrap; color:var(--muted); font-weight:600; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.tab.active { background: var(--accent); color:white; border-color:var(--accent); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.card { background:var(--card); border:1px solid var(--border); border-radius: var(--radius); padding:16px; margin-bottom:14px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.card h2 { font-size:15px; margin:0 0 10px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.card h3 { font-size:13px; margin:14px 0 6px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.next-up { display:flex; flex-direction:column; gap:8px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.next-up-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; background:var(--accent-light); font-size:14px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.next-up-item .chip { margin-left:auto; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.empty-note { color:var(--muted); font-size:13px; padding:8px 0; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.day-block { margin-bottom:10px; border:1px solid var(--border); border-radius:10px; overflow:hidden; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.day-header { padding:8px 12px; font-size:13px; font-weight:700; background:#fafbfc; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.day-header.today { background: var(--accent-light); color:var(--accent); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.shift-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; font-size:14px; border-top:1px solid var(--border); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.shift-row:first-of-type { border-top:none; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.shift-label { color:var(--muted); width:46px; font-size:12px; text-transform:uppercase; font-weight:700; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.shift-assignment { flex:1; margin-left:8px; cursor:pointer; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; font-size:13px; font-weight:600; color:white; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.chip.open { background:#d8dbe0; color:#555; font-style:italic; font-weight:500; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>select, input[type=number], input[type=text] { font-size:14px; padding:7px 9px; border-radius:8px; border:1px solid var(--border); background:white; color:var(--text); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>button.btn { background: var(--accent); color:white; border:none; border-radius:9px; padding:9px 14px; font-size:14px; font-weight:600; cursor:pointer; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>button.btn.secondary { background:white; color:var(--accent); border:1px solid var(--accent); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>button.btn.danger { background:white; color:var(--danger); border:1px solid var(--danger); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.gen-controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.avail-grid { width:100%; border-collapse:collapse; font-size:13px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.avail-grid th, .avail-grid td { padding:8px 4px; text-align:center; border-bottom:1px solid var(--border); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.avail-grid th { color:var(--muted); font-weight:600; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.avail-grid td:first-child, .avail-grid th:first-child { text-align:left; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.avail-grid input[type=checkbox] { width:18px; height:18px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.overview-row { display:flex; align-items:center; gap:8px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.swap-item { border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.swap-item .swap-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.swap-item .swap-actions { display:flex; gap:8px; margin-top:8px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.badge { font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.badge.open { background:#fff3cd; color:#8a6d00; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.badge.accepted { background:#d4f4e6; color:#0d7a4f; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.family-edit-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.family-edit-row input[type=text] { flex:1; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.color-swatch { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); cursor:pointer; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.field-row { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>label.small { font-size:12px; color:var(--muted); font-weight:600; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.setup-warning { background:#fff3cd; border:1px solid #f5cb5c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:14px; }</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1">&lt;div id="app"&gt;Loading...&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">/* ============================================================</p>
+<p class="p1"><span class="Apple-converted-space">   </span>1) PASTE YOUR FIREBASE CONFIG HERE</p>
+<p class="p1"><span class="Apple-converted-space">   </span>Get this from: Firebase console &gt; Project settings &gt; General</p>
+<p class="p1"><span class="Apple-converted-space">   </span>&gt; "Your apps" &gt; the web app (&lt;/&gt;) icon &gt; SDK setup and config.</p>
+<p class="p1"><span class="Apple-converted-space">   </span>It looks like the object below but with real values.</p>
+<p class="p1"><span class="Apple-converted-space">   </span>============================================================ */</p>
+<p class="p1">const firebaseConfig = {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>apiKey: "AIzaSyBu7mMgHr3gS5TC6MMt1kW_4nwbW6kZO0Q",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>authDomain: "shelton-carpool.firebaseapp.com",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>projectId: "shelton-carpool",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>storageBucket: "shelton-carpool.firebasestorage.app",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>messagingSenderId: "1083371894008",</p>
+<p class="p1"><span class="Apple-converted-space">  </span>appId: "1:1083371894008:web:adeaff6d3096e847bbb70d"</p>
+<p class="p1">};</p>
+<p class="p2"><br></p>
+<p class="p1">const CONFIG_IS_PLACEHOLDER = firebaseConfig.apiKey === "PASTE_YOUR_API_KEY";</p>
+<p class="p2"><br></p>
+<p class="p1">let db = null;</p>
+<p class="p1">if (!CONFIG_IS_PLACEHOLDER) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>firebase.initializeApp(firebaseConfig);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>db = firebase.firestore();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">const WEEKDAYS = ['mon','tue','wed','thu','fri'];</p>
+<p class="p1">const WEEKDAY_LABELS = {mon:'Monday', tue:'Tuesday', wed:'Wednesday', thu:'Thursday', fri:'Friday'};</p>
+<p class="p1">const DAY_NUM_TO_KEY = {1:'mon',2:'tue',3:'wed',4:'thu',5:'fri'};</p>
+<p class="p1">const DEFAULT_COLORS = ['#3f5efb','#e5484d','#22b07d','#f5a623','#9b59d0'];</p>
+<p class="p2"><br></p>
+<p class="p1">let families = [];</p>
+<p class="p1">let availability = {};</p>
+<p class="p1">let schedule = {};</p>
+<p class="p1">let swaps = [];</p>
+<p class="p1">let myFamilyId = localStorage.getItem('my-family-id') || null;</p>
+<p class="p1">let currentTab = 'schedule';</p>
+<p class="p1">let viewWeeks = 3;</p>
+<p class="p1">let editingFamilyIdForAvail = null;</p>
+<p class="p1">let loaded = false;</p>
+<p class="p2"><br></p>
+<p class="p1">function uid(){ return Math.random().toString(36).slice(2,10); }</p>
+<p class="p1">function pad(n){ return n&lt;10 ? '0'+n : ''+n; }</p>
+<p class="p1">function toISO(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }</p>
+<p class="p1">function fromISO(s){ return new Date(s+'T00:00:00'); }</p>
+<p class="p1">function addDays(d,n){ const nd=new Date(d); nd.setDate(nd.getDate()+n); return nd; }</p>
+<p class="p1">function isWeekday(d){ const dow=d.getDay(); return dow&gt;=1 &amp;&amp; dow&lt;=5; }</p>
+<p class="p1">function displayDate(d){ return d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}); }</p>
+<p class="p1">function familyById(id){ return families.find(f=&gt;f.id===id); }</p>
+<p class="p2"><br></p>
+<p class="p1">function defaultState() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const fams = DEFAULT_COLORS.map((c,i)=&gt;({id: uid(), name:'Family '+(i+1), color:c}));</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const avail = {};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>fams.forEach(f=&gt;{ avail[f.id] = {}; WEEKDAYS.forEach(w=&gt; avail[f.id][w] = {AM:true, PM:true}); });</p>
+<p class="p1"><span class="Apple-converted-space">  </span>return { families: fams, availability: avail, schedule: {}, swaps: [] };</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function docRef() { return db.collection('carpool').doc('state'); }</p>
+<p class="p2"><br></p>
+<p class="p1">async function ensureStateExists() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const snap = await docRef().get();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if (!snap.exists) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>await docRef().set(defaultState());</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function startListening() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>docRef().onSnapshot((snap) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!snap.exists) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const data = snap.data();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>families = data.families || [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>availability = data.availability || {};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>schedule = data.schedule || {};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>swaps = data.swaps || [];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>families.forEach(f=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!availability[f.id]) { availability[f.id] = {}; WEEKDAYS.forEach(w=&gt; availability[f.id][w] = {AM:true, PM:true}); }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>loaded = true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}, (err) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>console.error(err);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('app').innerHTML = `&lt;div class="setup-warning"&gt;&lt;strong&gt;Couldn't connect to Firebase.&lt;/strong&gt;&lt;br&gt;${err.message}&lt;br&gt;&lt;br&gt;Double-check your firebaseConfig values and Firestore security rules.&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">async function saveState() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>try {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>await docRef().set({ families, availability, schedule, swaps });</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} catch(e) { console.error('save failed', e); }</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">function generateSchedule(startDate, numWeeks) {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let counts = {}; families.forEach(f=&gt;counts[f.id]=0);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let lastIdx = {}; let idx = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>Object.keys(schedule).sort().forEach(dateKey=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>['AM','PM'].forEach(shift=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const fid = schedule[dateKey][shift];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (fid &amp;&amp; counts[fid]!==undefined) { counts[fid]++; lastIdx[fid]=idx; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>idx++;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let current = new Date(startDate);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>while (!isWeekday(current)) current = addDays(current,1);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let filled = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const targetSlots = numWeeks * 5;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>while (filled &lt; targetSlots) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dateKey = toISO(current);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const wkey = DAY_NUM_TO_KEY[current.getDay()];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if (!schedule[dateKey]) schedule[dateKey] = {AM:null, PM:null};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>['AM','PM'].forEach(shift=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>idx++;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (schedule[dateKey][shift]) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let candidates = families.filter(f =&gt; availability[f.id]?.[wkey]?.[shift] !== false);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (candidates.length === 0) { schedule[dateKey][shift] = null; return; }</p>
+<p class="p1"><span class="Apple-converted-space">      </span>candidates.sort((a,b)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const ca = counts[a.id]||0, cb = counts[b.id]||0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if (ca !== cb) return ca - cb;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const la = lastIdx[a.id] ?? -1, lb = lastIdx[b.id] ?? -1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return la - lb;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const chosen = candidates[0];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>schedule[dateKey][shift] = chosen.id;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>counts[chosen.id] = (counts[chosen.id]||0) + 1;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>lastIdx[chosen.id] = idx;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+</body>
+</html>
