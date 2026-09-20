@@ -109,7 +109,7 @@ let schedule = {};
 let swaps = [];
 let myFamilyId = localStorage.getItem('my-family-id') || null;
 let currentTab = 'schedule';
-let viewWeeks = 3;
+let viewWeeks = 1;
 let editingFamilyIdForAvail = null;
 let loaded = false;
 
@@ -291,7 +291,7 @@ function renderScheduleTab() {
 
   html += `<div class="card"><h2>Generate / extend rotation</h2>
     <div class="gen-controls">
-      <label class="small">Weeks to fill: <input type="number" id="genWeeks" min="1" max="12" value="4" style="width:60px"></label>
+      <label class="small">Weeks to fill: <input type="number" id="genWeeks" min="1" max="12" value="1" style="width:60px"></label>
       <button class="btn" onclick="doGenerate()">Auto-fill fair schedule</button>
     </div>
     <div class="empty-note">Fills only empty shifts, balances totals across families based on the Availability tab, and never overwrites shifts already assigned.</div>
