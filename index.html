@@ -69,6 +69,12 @@
   .field-row { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
   label.small { font-size:12px; color:var(--muted); font-weight:600; }
   .setup-warning { background:#fff3cd; border:1px solid #f5cb5c; border-radius:10px; padding:14px; font-size:13px; margin-bottom:14px; }
+  .riders-row { padding:6px 12px 10px 58px; display:flex; flex-wrap:wrap; gap:6px; border-top:1px dashed var(--border); }
+  .rider-chip { display:inline-flex; align-items:center; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--border); background:var(--accent-light); color:var(--text); }
+  .rider-chip.off { background:#f1f1f2; color:#aaa; text-decoration:line-through; border-color:#f1f1f2; }
+  .rider-chip.mine { box-shadow: 0 0 0 2px var(--accent); }
+  .rider-chip.not-mine { cursor:default; opacity:0.7; }
+  .riders-label { font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700; margin-right:2px; align-self:center; }
 </style>
 </head>
 <body>
@@ -107,6 +113,7 @@ let families = [];
 let availability = {};
 let schedule = {};
 let swaps = [];
+let riders = {};
 let myFamilyId = localStorage.getItem('my-family-id') || null;
 let currentTab = 'schedule';
 let viewWeeks = 1;
@@ -121,12 +128,27 @@ function addDays(d,n){ const nd=new Date(d); nd.setDate(nd.getDate()+n); return 
 function isWeekday(d){ const dow=d.getDay(); return dow>=1 && dow<=5; }
 function displayDate(d){ return d.toLocaleDateString('en-US',{weekday:'short', month:'short', day:'numeric'}); }
 function familyById(id){ return families.find(f=>f.id===id); }
+function riderLabel(f){ return f.kidName && f.kidName.trim() ? f.kidName.trim() : f.name; }
+
+function getRiders(dateKey, shift) {
+  if (riders[dateKey] && riders[dateKey][shift]) return riders[dateKey][shift];
+  return families.map(f => f.id); // default: everyone rides
+}
+
+function toggleRider(dateKey, shift, familyId) {
+  const current = getRiders(dateKey, shift).slice();
+  const idx = current.indexOf(familyId);
+  if (idx === -1) current.push(familyId); else current.splice(idx, 1);
+  if (!riders[dateKey]) riders[dateKey] = {};
+  riders[dateKey][shift] = current;
+  saveState();
+}
 
 function defaultState() {
   const fams = DEFAULT_COLORS.map((c,i)=>({id: uid(), name:'Family '+(i+1), color:c}));
   const avail = {};
   fams.forEach(f=>{ avail[f.id] = {}; WEEKDAYS.forEach(w=> avail[f.id][w] = {AM:true, PM:true}); });
-  return { families: fams, availability: avail, schedule: {}, swaps: [] };
+  return { families: fams, availability: avail, schedule: {}, swaps: [], riders: {} };
 }
 
 function docRef() { return db.collection('carpool').doc('state'); }
@@ -146,7 +168,9 @@ function startListening() {
     availability = data.availability || {};
     schedule = data.schedule || {};
     swaps = data.swaps || [];
+    riders = data.riders || {};
     families.forEach(f=>{
+      if (f.kidName === undefined) f.kidName = '';
       if (!availability[f.id]) { availability[f.id] = {}; WEEKDAYS.forEach(w=> availability[f.id][w] = {AM:true, PM:true}); }
     });
     loaded = true;
@@ -159,7 +183,7 @@ function startListening() {
 
 async function saveState() {
   try {
-    await docRef().set({ families, availability, schedule, swaps });
+    await docRef().set({ families, availability, schedule, swaps, riders });
   } catch(e) { console.error('save failed', e); }
 }
 
@@ -316,14 +340,28 @@ function renderScheduleTab() {
       <div class="shift-row"><span class="shift-label">AM</span>
         <span class="shift-assignment" onclick="openOverride('${key}','AM')">${chipHtml(s.AM)}</span>
       </div>
+      ${ridersRowHtml(key, 'AM')}
       <div class="shift-row"><span class="shift-label">PM</span>
         <span class="shift-assignment" onclick="openOverride('${key}','PM')">${chipHtml(s.PM)}</span>
       </div>
+      ${ridersRowHtml(key, 'PM')}
     </div>`;
   });
   html += `<div class="empty-note">Tap any shift to manually reassign it.</div></div>`;
 
   return html;
+}
+
+function ridersRowHtml(dateKey, shift) {
+  const activeRiders = getRiders(dateKey, shift);
+  const chips = families.map(f => {
+    const isOn = activeRiders.includes(f.id);
+    const isMine = f.id === myFamilyId;
+    const classes = `rider-chip ${isOn?'':'off'} ${isMine?'mine':'not-mine'}`;
+    const clickAttr = isMine ? `onclick="toggleRider('${dateKey}','${shift}','${f.id}')"` : '';
+    return `<span class="${classes}" ${clickAttr}>${riderLabel(f)}${isMine?' (you)':''}</span>`;
+  }).join('');
+  return `<div class="riders-row"><span class="riders-label">Riding:</span>${chips}</div>`;
 }
 
 function openOverride(dateKey, shift) {
@@ -495,10 +533,14 @@ function renderSettingsTab() {
   families.forEach((f,i)=>{
     html += `<div class="family-edit-row">
       <input type="color" class="color-swatch" value="${f.color}" onchange="updateFamilyColor(${i}, this.value)">
-      <input type="text" value="${f.name}" onchange="updateFamilyName(${i}, this.value)">
+      <input type="text" value="${f.name}" onchange="updateFamilyName(${i}, this.value)" placeholder="Family name">
+    </div>
+    <div class="family-edit-row" style="margin-top:-4px;margin-bottom:14px;">
+      <span style="width:28px"></span>
+      <input type="text" value="${f.kidName || ''}" onchange="updateFamilyKidName(${i}, this.value)" placeholder="Kid's first name (optional)">
     </div>`;
   });
-  html += `<div class="empty-note">Renaming a family updates it everywhere immediately.</div></div>`;
+  html += `<div class="empty-note">Renaming a family updates it everywhere immediately. Set a kid's first name to show that instead of the family name in the "Riding" list on the Schedule tab.</div></div>`;
   html += `<div class="card"><h2>Danger zone</h2>
     <button class="btn danger" onclick="clearSchedule()">Clear entire schedule</button>
     <div class="empty-note">This erases all generated assignments (not availability settings or family names).</div>
@@ -508,6 +550,7 @@ function renderSettingsTab() {
 
 function updateFamilyName(i, val) { families[i].name = val || families[i].name; saveState(); }
 function updateFamilyColor(i, val) { families[i].color = val; saveState(); }
+function updateFamilyKidName(i, val) { families[i].kidName = val; saveState(); }
 function clearSchedule() {
   if (!confirm('Clear the entire generated schedule? This cannot be undone.')) return;
   schedule = {};
